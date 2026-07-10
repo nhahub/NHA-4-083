@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Souq — Egyptian Property Valuation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Cairo:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sand:#f4ead9;
+    --sand-dim:#d9c9a8;
+    --clay:#b5502f;
+    --clay-bright:#d76a44;
+    --ink:#241a12;
+    --ink-soft:#5a4a3a;
+    --card:#ffffff;
+    --line:rgba(36,26,18,0.12);
+    --teal:#1f6f5c;
+    --teal-bright:#2c9a80;
+    --error:#a83f2b;
+    --error-bg:#fbe6df;
+  }
+  *,*::before,*::after{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(213,106,68,0.18), transparent),
+      var(--sand);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  img,svg{max-width:100%;display:block;}
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:36px 18px 70px;
+    width:100%;
+  }
+
+  /* ── Masthead ─────────────────────────────────────────── */
+  .masthead{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+  }
+  .seal{
+    width:48px;height:48px;flex-shrink:0;
+    border-radius:14px;
+    background:var(--clay);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:20px;
+    color:var(--sand);
+  }
+  .masthead h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(22px,5.5vw,30px);
+    margin:0;
+    color:var(--ink);
+    line-height:1.15;
+  }
+  .masthead .sub{
+    font-size:12.5px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin-top:2px;
+  }
+
+  /* ── Tabs ─────────────────────────────────────────────── */
+  .tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:18px;
+  }
+  .tab-btn{
+    flex:1;
+    min-width:0;
+    background:transparent;
+    border:1.5px solid var(--line);
+    color:var(--ink-soft);
+    padding:13px 10px;
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:700;
+    letter-spacing:.01em;
+    cursor:pointer;
+    border-radius:12px;
+    transition:all .18s ease;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tab-btn.active{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:var(--sand);
+  }
+
+  /* ── Panel ────────────────────────────────────────────── */
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:26px 22px;
+    box-shadow:0 12px 30px rgba(36,26,18,0.06);
+  }
+  .panel-view{display:none;}
+  .panel-view.active{display:block;animation:fadeIn .25s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  .panel-lede{
+    color:var(--ink-soft);
+    font-size:14px;
+    line-height:1.6;
+    margin:0 0 24px;
+  }
+
+  form#predict-form{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px 14px;
+  }
+  .field{display:flex;flex-direction:column;gap:6px;min-width:0;}
+  .field.full{grid-column:1/-1;}
+  label{
+    font-size:11px;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    font-weight:700;
+  }
+  input, select{
+    background:var(--sand);
+    border:1.5px solid var(--line);
+    color:var(--ink);
+    padding:12px 13px;
+    border-radius:10px;
+    font-size:15px;
+    font-family:inherit;
+    outline:none;
+    width:100%;
+    min-width:0;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input::placeholder{color:var(--ink-soft); opacity:.8;}
+  input:focus, select:focus{
+    border-color:var(--clay);
+    box-shadow:0 0 0 3px rgba(181,80,47,0.14);
+  }
+  select{cursor:pointer;}
+
+  button.primary{
+    grid-column:1/-1;
+    margin-top:4px;
+    background:var(--clay);
+    color:#fff;
+    border:none;
+    padding:15px;
+    border-radius:10px;
+    font-size:15px;
+    font-weight:700;
+    letter-spacing:.01em;
+    cursor:pointer;
+    transition:background .15s ease, transform .08s ease;
+  }
+  button.primary:hover{background:var(--clay-bright);}
+  button.primary:active{transform:scale(0.99);}
+  button.primary:disabled{opacity:.55;cursor:default;}
+
+  .result{
+    margin-top:24px;
+    border:1.5px solid rgba(31,111,92,0.25);
+    border-radius:14px;
+    padding:20px 22px;
+    display:none;
+    background:rgba(31,111,92,0.06);
+  }
+  .result.show{display:block;animation:fadeIn .25s ease;}
+  .result .label{
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--teal);
+    font-weight:700;
+    margin:0 0 6px;
+  }
+  .price{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:clamp(28px,7vw,40px);
+    color:var(--ink);
+    margin:0;
+    word-break:break-word;
+  }
+  .price .cur{font-size:.4em;color:var(--ink-soft);margin-left:8px;letter-spacing:.05em;font-family:'Inter',sans-serif;font-weight:600;}
+
+  .error-box{
+    margin-top:18px;
+    padding:14px 16px;
+    border-radius:10px;
+    background:var(--error-bg);
+    border:1px solid rgba(168,63,43,0.25);
+    color:var(--error);
+    font-size:13.5px;
+    line-height:1.5;
+    display:none;
+    word-break:break-word;
+  }
+  .error-box.show{display:block;}
+
+  .panel-footnote{
+    margin-top:20px;
+    color:var(--ink-soft);
+    font-size:12px;
+    line-height:1.5;
+  }
+
+  /* ── Chat ─────────────────────────────────────────────── */
+  .chat-lede{
+    font-family:'Cairo',sans-serif;
+    direction:rtl;
+    text-align:right;
+    color:var(--ink-soft);
+    font-size:14px;
+    line-height:1.7;
+    margin:0 0 20px;
+  }
+  .chat-log{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    margin-bottom:16px;
+    max-height:420px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding:2px 2px 2px 4px;
+  }
+  .chat-log:empty::before{
+    content:'اسأل عن أي حاجة في السوق — الأسعار، المناطق، أو أنواع العقارات.';
+    display:block;
+    direction:rtl;
+    text-align:right;
+    font-family:'Cairo',sans-serif;
+    color:var(--ink-soft);
+    font-size:13.5px;
+    padding:16px 4px;
+  }
+  .chat-msg{
+    padding:12px 14px;
+    border-radius:12px;
+    font-size:14px;
+    line-height:1.65;
+    font-family:'Cairo',sans-serif;
+    word-break:break-word;
+    max-width:100%;
+  }
+  .chat-msg.user{
+    background:var(--sand);
+    border:1px solid var(--line);
+    color:var(--ink);
+    direction:rtl;
+    text-align:right;
+  }
+  .chat-msg.assistant{
+    background:rgba(31,111,92,0.07);
+    border:1px solid rgba(31,111,92,0.2);
+    color:var(--ink);
+  }
+  .chat-msg.assistant.is-error{
+    background:var(--error-bg);
+    border-color:rgba(168,63,43,0.25);
+    direction:rtl;
+    text-align:right;
+    color:var(--error);
+  }
+  .chat-table-wrap{margin-top:10px;max-width:100%;overflow-x:auto;border-radius:8px;-webkit-overflow-scrolling:touch;}
+  .chat-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12.5px;
+    direction:ltr;
+    font-family:'Inter',sans-serif;
+  }
+  .chat-table th, .chat-table td{
+    padding:8px 10px;
+    border-bottom:1px solid var(--line);
+    text-align:left;
+    white-space:nowrap;
+    color:var(--ink);
+  }
+  .chat-table th{color:var(--clay);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.03em;}
+  .chat-input-row{
+    display:flex;
+    gap:8px;
+    direction:rtl;
+    flex-wrap:wrap;
+  }
+  .chat-input-row input{
+    flex:1 1 160px;
+    min-width:0;
+    font-family:'Cairo',sans-serif;
+  }
+  .chat-input-row button{
+    width:auto;
+    flex:0 0 auto;
+    padding:12px 22px;
+    white-space:nowrap;
+  }
+  .typing-dots{display:inline-flex;gap:3px;align-items:center;padding:4px 0;}
+  .typing-dots span{
+    width:5px;height:5px;border-radius:50%;
+    background:var(--teal-bright);
+    animation:pulse 1.2s infinite ease-in-out;
+  }
+  .typing-dots span:nth-child(2){animation-delay:.15s;}
+  .typing-dots span:nth-child(3){animation-delay:.3s;}
+  @keyframes pulse{0%,80%,100%{opacity:.25;transform:scale(0.8);}40%{opacity:1;transform:scale(1);}}
+
+  /* ── Mobile ───────────────────────────────────────────── */
+  @media (max-width:560px){
+    .wrap{padding:24px 14px 50px;}
+    form#predict-form{grid-template-columns:1fr;}
+    .tab-btn{font-size:13px;padding:12px 8px;}
+    .panel{padding:20px 16px; border-radius:16px;}
+    .chat-input-row{flex-wrap:nowrap;}
+    .chat-input-row button{padding:12px 16px; font-size:13.5px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="seal">S</div>
+    <div>
+      <h1>Egypt Real Estate</h1>
+      <div class="sub">Egyptian Real Estate · Live Market Data</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="estimate">Price Estimator</button>
+    <button class="tab-btn" data-tab="chat">Ask the Market</button>
+  </div>
+
+  <div class="panel">
+
+    <div class="panel-view active" id="view-estimate">
+      <p class="panel-lede">Enter the property details below. The estimate comes from a model trained on live Egyptian listings, weighing location, compound, and property type.</p>
+
+      <form id="predict-form">
+        <div class="field">
+          <label for="area">Area (sqm)</label>
+          <input type="number" id="area" value="150" min="10" required>
+        </div>
+        <div class="field">
+          <label for="bedrooms">Bedrooms</label>
+          <input type="number" id="bedrooms" value="3" min="0" required>
+        </div>
+        <div class="field">
+          <label for="bathrooms">Bathrooms</label>
+          <input type="number" id="bathrooms" value="2" min="0" required>
+        </div>
+        <div class="field">
+          <label for="property_type">Property type</label>
+          <select id="property_type" required></select>
+        </div>
+        <div class="field full">
+          <label for="location">Location</label>
+          <select id="location" required></select>
+        </div>
+        <button type="submit" class="primary" id="submit-btn">Estimate price</button>
+      </form>
+
+      <div class="result" id="result">
+        <p class="label">Estimated price</p>
+        <p class="price" id="price-value">—<span class="cur">EGP</span></p>
+      </div>
+
+      <div class="error-box" id="error"></div>
+
+      <p class="panel-footnote">Estimates are model-generated from historical listing data and are not a valuation or appraisal.</p>
+    </div>
+
+    <div class="panel-view" id="view-chat">
+      <p class="chat-lede">اسأل عن أسعار العقارات، المناطق، أو الأنواع المتاحة — هنجاوبك ببيانات حقيقية من السوق.</p>
+
+      <div class="chat-log" id="chat-log"></div>
+
+      <form id="chat-form" class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="مثال: عايز شقة في التجمع سعرها أقل من 3 مليون" required>
+        <button type="submit" class="primary" id="chat-submit-btn">إرسال</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API_BASE = '';
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel-view').forEach(v => v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+async function loadMeta() {
+  const res = await fetch(`${API_BASE}/api/meta`);
+  if (!res.ok) throw new Error('Failed to load form options');
+  const data = await res.json();
+  fillSelect('location', data.locations);
+  fillSelect('property_type', data.property_types);
+}
+
+function fillSelect(id, options) {
+  const el = document.getElementById(id);
+  el.innerHTML = '';
+  options.forEach(opt => {
+    const o = document.createElement('option');
+    o.value = opt;
+    o.textContent = opt;
+    el.appendChild(o);
+  });
+}
+
+document.getElementById('predict-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  const resultBox = document.getElementById('result');
+  const errorBox = document.getElementById('error');
+
+  resultBox.classList.remove('show');
+  errorBox.classList.remove('show');
+  btn.disabled = true;
+  btn.textContent = 'Estimating…';
+
+  const payload = {
+    area: Number(document.getElementById('area').value),
+    bedrooms: Number(document.getElementById('bedrooms').value),
+    bathrooms: Number(document.getElementById('bathrooms').value),
+    location: document.getElementById('location').value,
+    property_type: document.getElementById('property_type').value,
+  };
+
+  try {
+    const res = await fetch(`${API_BASE}/api/predict`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(data.error || 'Prediction failed');
+
+    document.getElementById('price-value').innerHTML =
+      Number(data.price_egp).toLocaleString('en-US') + '<span class="cur">EGP</span>';
+    resultBox.classList.add('show');
+  } catch (err) {
+    errorBox.textContent = 'Couldn\'t generate an estimate: ' + err.message;
+    errorBox.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Estimate price';
+  }
+});
+
+loadMeta().catch(err => {
+  const errorBox = document.getElementById('error');
+  errorBox.textContent = 'Couldn\'t load form options: ' + err.message;
+  errorBox.classList.add('show');
+});
+
+const chatLog = document.getElementById('chat-log');
+
+function addUserMessage(text) {
+  const div = document.createElement('div');
+  div.className = 'chat-msg user';
+  div.textContent = text;
+  chatLog.appendChild(div);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function addTypingIndicator() {
+  const div = document.createElement('div');
+  div.className = 'chat-msg assistant';
+  div.id = 'typing-indicator';
+  div.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  chatLog.appendChild(div);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+function addAssistantMessage({ sql, columns, rows, error }) {
+  const div = document.createElement('div');
+  div.className = 'chat-msg assistant';
+
+  if (error) {
+    div.classList.add('is-error');
+    div.textContent = 'حصلت مشكلة: ' + error;
+    chatLog.appendChild(div);
+    chatLog.scrollTop = chatLog.scrollHeight;
+    return;
+  }
+
+  if (!rows || rows.length === 0) {
+    div.dir = 'rtl';
+    div.style.textAlign = 'right';
+    div.textContent = 'للأسف مفيش نتائج مطابقة لطلبك.';
+  } else {
+    const tableWrap = document.createElement('div');
+    tableWrap.className = 'chat-table-wrap';
+    const table = document.createElement('table');
+    table.className = 'chat-table';
+
+    const thead = document.createElement('tr');
+    columns.forEach(col => {
+      const th = document.createElement('th');
+      th.textContent = col;
+      thead.appendChild(th);
+    });
+    table.appendChild(thead);
+
+    rows.forEach(row => {
+      const tr = document.createElement('tr');
+      row.forEach(cell => {
+        const td = document.createElement('td');
+        td.textContent = cell === null ? '—' : cell;
+        tr.appendChild(td);
+      });
+      table.appendChild(tr);
+    });
+
+    tableWrap.appendChild(table);
+    div.appendChild(tableWrap);
+  }
+  chatLog.appendChild(div);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+document.getElementById('chat-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = document.getElementById('chat-input');
+  const btn = document.getElementById('chat-submit-btn');
+  const query = input.value.trim();
+  if (!query) return;
+
+  addUserMessage(query);
+  input.value = '';
+  btn.disabled = true;
+  addTypingIndicator();
+
+  try {
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    });
+    const data = await res.json();
+    removeTypingIndicator();
+    if (!res.ok || data.error) {
+      addAssistantMessage({ error: data.error || 'حصل خطأ غير متوقع' });
+    } else {
+      addAssistantMessage(data);
+    }
+  } catch (err) {
+    removeTypingIndicator();
+    addAssistantMessage({ error: err.message });
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
